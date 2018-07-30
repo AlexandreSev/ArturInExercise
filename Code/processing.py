@@ -5,8 +5,8 @@ import numpy as np
 from sklearn.metrics import f1_score
 from sklearn.naive_bayes import MultinomialNB
 
-from utils import openPickle, getTrainTest
-from preprocessing import toBoolList, sparseBagOfWords, TfIdfTransformer
+from utils import openPickle
+from preprocessing import toBoolList, sparseBagOfWords, TfIdfTransformer, getTrainTest
 
 def evaluateModel(model, trainPath, labelsPath, preprocesser=sparseBagOfWords):
 	"""
