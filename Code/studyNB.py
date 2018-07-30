@@ -15,14 +15,15 @@ encoder = openPickle("./Data/dict.pkl")
 decoder = {encoder[i]: i for i in encoder}
 
 # Naive Bayes with bag of words
-#model = MultinomialNB(alpha=0.1)
-model = LinearSVC(C = 0.1, class_weight="balanced")
+model = MultinomialNB(alpha=0.1)
 _, expectedScore = evaluateModel(model, "./Data/Learn/sequences.pkl", "./Data/Learn/labels.pkl")
-"""
+
 print("")
-print("Prob 0: %s. Prob 1: %s"%(np.exp(model.class_log_prior_[0]), np.exp(model.class_log_prior_[1])))
+print("Prob 0: %s. Prob 1: %s"%(np.exp(model.class_log_prior_[0]),
+								np.exp(model.class_log_prior_[1])))
 print("There are %s features."%len(model.feature_log_prob_[0]))
-print("There are %s negatives sequences, %s positive"%(model.class_count_[0], model.class_count_[1]))
+print("There are %s negatives sequences, %s positive"%(model.class_count_[0],
+													   model.class_count_[1]))
 
 order1, order0 = top20Coefs(model)
 
@@ -49,18 +50,21 @@ mcPreds = convertLabels(preds)
 name = "model__%s__preprocesser__%s__expected__%.4f.pkl"%(model, "sparseBagOfWords", expectedScore)
 
 savePickle(pjoin("./Results/", name), mcPreds)
-"""
+
 # Naive Bayes with tf-idf
+
 print("\n" + "#"*50 + "\n")
-#model = MultinomialNB(alpha=1.)
-model = LinearSVC(C=0.001, class_weight="balanced")
+model = MultinomialNB(alpha=1.)
 preprocesser = TfIdfTransformer(norm=None)
-_, expectedScore = evaluateModel(model, "./Data/Learn/sequences.pkl", "./Data/Learn/labels.pkl", preprocesser)
-"""
+_, expectedScore = evaluateModel(model, "./Data/Learn/sequences.pkl", "./Data/Learn/labels.pkl",
+								 preprocesser)
+
 print("")
-print("Prob 0: %s. Prob 1: %s"%(np.exp(model.class_log_prior_[0]), np.exp(model.class_log_prior_[1])))
+print("Prob 0: %s. Prob 1: %s"%(np.exp(model.class_log_prior_[0]),
+								np.exp(model.class_log_prior_[1])))
 print("There are %s features."%len(model.feature_log_prob_[0]))
-print("There are %s negatives sequences, %s positive"%(model.class_count_[0], model.class_count_[1]))
+print("There are %s negatives sequences, %s positive"%(model.class_count_[0],
+													   model.class_count_[1]))
 
 order1, order0 = top20Coefs(model)
 
@@ -87,4 +91,3 @@ mcPreds = convertLabels(preds)
 name = "model__%s__preprocesser__%s__expected__%.4f.pkl"%(model, preprocesser, expectedScore)
 
 savePickle(pjoin("./Results/", name), mcPreds)
-"""
