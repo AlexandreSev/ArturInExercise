@@ -1,11 +1,38 @@
 # coding: utf-8
 
-from scipy import sparse
 import numpy as np
+import word2vec
+import os
 
 from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.model_selection import train_test_split
+from keras.preprocessing.sequence import pad_sequences
+from scipy import sparse
 
 from sentenceFunctions import wordCount
+from utils import openPickle, savePickle
+
+def getTrainTest(labels):
+    """
+    Split the dataset into a training and a testing set, conserving the labels.
+
+    Parameters:
+    -----------
+        labels (string or list): Path to the pickle of the labels, or directly the labels.
+
+    Returns:
+    --------
+        ((list<int>, list<int>)): Return a pair of lists of indices. The first list correspond to
+            the training set, the second one to the testing set.
+    """
+    if type(labels) == str:
+        y = toBoolList(openPickle(labels))
+    else:
+        y = toBoolList(labels)
+
+    X = np.arange(len(y))
+    return train_test_split(X, stratify=y, random_state=42)
+
 
 def sparseBagOfWords(sequences, shape=None):
     """
@@ -294,6 +321,71 @@ def reIndexSequences(sequences, fromOldToNew):
         (list<list<int>>): Reindexed sequences
     """
     return [[fromOldToNew[key] for key in seq] for seq in sequences]
+
+def preprocessDeepModel(sequencesPath):
+    """
+    Preprocess the sequences to make them trainable by a deep model.
+
+    Parameters:
+    -----------
+        sequencesPath (str); where are stored the sequences
+
+    Returns:
+    --------
+        (np.arrays): the training and the validation data, and the training and the validation
+                     labels.
+    """
+
+    modelPath = "./Resources/frWac_non_lem_no_postag_no_phrase_200_cbow_cut100.bin"
+
+    # Download the model if needed
+    if not os.path.isfile(modelPath):
+        link = " http://embeddings.org/frWac_non_lem_no_postag_no_phrase_200_cbow_cut100.bin"
+        os.system("wget -O " + modelPath + link)
+
+    # Load the model
+    w2v = word2vec.load(modelPath)
+    vocab = set(w2v.vocab)
+
+    # Load the encoder
+    encoder = openPickle("./Data/dict.pkl")
+    decoder = {encoder[key]: key for key in encoder}
+
+    #if not os.path.isfile(sequencesPath):
+    if not os.path.isfile(sequencesPath):   
+        fromOldToNew = reIndexToken(w2v, decoder)
+
+        newCoder = {"pad": 0, "unk": len(decoder) - 1}
+        for key in decoder:
+            if fromOldToNew[key] != len(decoder) - 1:
+                newCoder[decoder[key]] = fromOldToNew[key]
+
+        savePickle("./Data/newDict.pkl", newCoder)
+        
+        oldSeqPath = "./Data/Learn/correctedSequences.pkl"
+        if not os.path.isfile(oldSeqPath):
+            raise FileNotFoundError("Please run studyWord2Vec.py")
+        
+        sequences = openPickle(oldSeqPath)
+        sequences = reIndexSequences(sequences, fromOldToNew)
+        savePickle(sequencesPath, sequences)
+    else:
+        sequences = openPickle(sequencesPath)
+
+    maxLength = max([len(seq) for seq in sequences])
+    paddedSeq = pad_sequences(sequences, maxlen=maxLength)
+
+    labels = np.array(toBoolList(openPickle("./Data/Learn/labels.pkl"))).astype(int)
+
+    print('Shape of data tensor:', paddedSeq.shape)
+    print('Shape of label tensor:', labels.shape)
+
+    trainInd, testInd = getTrainTest(labels)
+
+    X_train, X_val = paddedSeq[trainInd], paddedSeq[testInd]
+    y_train, y_val = labels[trainInd], labels[testInd]
+
+    return X_train, X_val, y_train, y_val
 
 
 if __name__ == "__main__":

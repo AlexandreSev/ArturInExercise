@@ -11,11 +11,7 @@ from postprocessing import top20Coefs, convertLabels
 from processing import evaluateModel, getPredictions
 from preprocessing import TfIdfTransformer, sparseBagOfWords
 
-encoder = openPickle("./Data/dict.pkl")
-decoder = {encoder[i]: i for i in encoder}
-
 # Naive Bayes with bag of words
-#model = MultinomialNB(alpha=0.1)
 model = LinearSVC(C = 0.1, class_weight="balanced")
 _, expectedScore = evaluateModel(model, "./Data/Learn/sequences.pkl", "./Data/Learn/labels.pkl")
 
@@ -32,9 +28,8 @@ savePickle(pjoin("./Results/", name), mcPreds)
 
 # Naive Bayes with tf-idf
 print("\n" + "#"*50 + "\n")
-#model = MultinomialNB(alpha=1.)
-model = LinearSVC(C=0.001, class_weight="balanced")
-preprocesser = TfIdfTransformer(norm=None)
+model = LinearSVC(C=11., class_weight="balanced")
+preprocesser = TfIdfTransformer(norm="l1")
 _, expectedScore = evaluateModel(model, "./Data/Learn/sequences.pkl", "./Data/Learn/labels.pkl",
                                  preprocesser)
 
