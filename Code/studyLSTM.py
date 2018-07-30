@@ -9,10 +9,22 @@ from keras.layers import Dense, LSTM, Input
 from keras.layers.embeddings import Embedding
 from keras.callbacks import ModelCheckpoint
 
-from preprocessing import embeddingMatrix, preprocessDeepModel
+from preprocessing import embeddingMatrix, preprocessDeepModel, toBoolList, getTrainTest
 from utils import openPickle
 
-X_train, X_val, y_train, y_val = preprocessDeepModel("./Data/Learn/kerasSequences.pkl")
+paddedSeq = preprocessDeepModel("./Data/Learn/correctedSequences.pkl",
+                                "./Data/Learn/kerasSequences.pkl")
+
+labels = np.array(toBoolList(openPickle("./Data/Learn/labels.pkl"))).astype(int)
+
+print('Shape of data tensor:', paddedSeq.shape)
+print('Shape of label tensor:', labels.shape)
+
+trainInd, testInd = getTrainTest(labels)
+
+X_train, X_val = paddedSeq[trainInd], paddedSeq[testInd]
+y_train, y_val = labels[trainInd], labels[testInd]
+
 w2v = word2vec.load("./Resources/frWac_non_lem_no_postag_no_phrase_200_cbow_cut100.bin")
 
 encoder = openPickle("./Data/newDict.pkl")

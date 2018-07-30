@@ -32,7 +32,7 @@ if not os.path.isfile("./Data/Learn/embeddedMeanSequences.pkl"):
 
 	savePickle("./Data/Learn/embeddedMeanSequences.pkl", embeddedSeq)
 
-model = XGBClassifier(n_estimators=500, max_depth=5, reg_alpha=1., reg_lambda=10.)
+model = XGBClassifier(n_estimators=500, max_depth=5, reg_alpha=10., reg_lambda=20.)
 _, expectedScore = evaluateModel(model, "./Data/Learn/embeddedMeanSequences.pkl",
 	"./Data/Learn/labels.pkl", lambda x:x)
 print("")

@@ -322,13 +322,15 @@ def reIndexSequences(sequences, fromOldToNew):
     """
     return [[fromOldToNew[key] for key in seq] for seq in sequences]
 
-def preprocessDeepModel(sequencesPath):
+def preprocessDeepModel(sequencesPath, outputPath, maxLen=None):
     """
     Preprocess the sequences to make them trainable by a deep model.
 
     Parameters:
     -----------
         sequencesPath (str); where are stored the sequences
+        outputPath (str): where will be stored the preprocessed sequenced
+        maxLen(int): size of the padded sequences
 
     Returns:
     --------
@@ -352,40 +354,37 @@ def preprocessDeepModel(sequencesPath):
     decoder = {encoder[key]: key for key in encoder}
 
     #if not os.path.isfile(sequencesPath):
-    if not os.path.isfile(sequencesPath):   
+    if not os.path.isfile(outputPath):   
+
         fromOldToNew = reIndexToken(w2v, decoder)
-
-        newCoder = {"pad": 0, "unk": len(decoder) - 1}
-        for key in decoder:
-            if fromOldToNew[key] != len(decoder) - 1:
-                newCoder[decoder[key]] = fromOldToNew[key]
-
-        savePickle("./Data/newDict.pkl", newCoder)
         
-        oldSeqPath = "./Data/Learn/correctedSequences.pkl"
-        if not os.path.isfile(oldSeqPath):
+        if not os.path.isfile("./Data/newDict.pkl"):
+
+            newCoder = {"pad": 0, "unk": len(decoder) - 1}
+            for key in decoder:
+                if fromOldToNew[key] != len(decoder) - 1:
+                    newCoder[decoder[key]] = fromOldToNew[key]
+
+            savePickle("./Data/newDict.pkl", newCoder)
+        else:
+            newCoder = openPickle("./Data/newDict.pkl")
+        
+        if not os.path.isfile(sequencesPath):
             raise FileNotFoundError("Please run studyWord2Vec.py")
         
-        sequences = openPickle(oldSeqPath)
-        sequences = reIndexSequences(sequences, fromOldToNew)
-        savePickle(sequencesPath, sequences)
-    else:
         sequences = openPickle(sequencesPath)
+        sequences = reIndexSequences(sequences, fromOldToNew)
+        savePickle(outputPath, sequences)
+    else:
+        sequences = openPickle(outputPath)
 
-    maxLength = max([len(seq) for seq in sequences])
-    paddedSeq = pad_sequences(sequences, maxlen=maxLength)
+    if maxLen is None:
+        maxLength = max([len(seq) for seq in sequences])
+    else:
+        maxLength = maxLen
 
-    labels = np.array(toBoolList(openPickle("./Data/Learn/labels.pkl"))).astype(int)
+    return pad_sequences(sequences, maxlen=maxLength)
 
-    print('Shape of data tensor:', paddedSeq.shape)
-    print('Shape of label tensor:', labels.shape)
-
-    trainInd, testInd = getTrainTest(labels)
-
-    X_train, X_val = paddedSeq[trainInd], paddedSeq[testInd]
-    y_train, y_val = labels[trainInd], labels[testInd]
-
-    return X_train, X_val, y_train, y_val
 
 
 if __name__ == "__main__":
