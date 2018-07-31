@@ -39,7 +39,7 @@ embedding_layer = Embedding(embMatrix.shape[0], embMatrix.shape[1], weights=[emb
                             input_length=X_train.shape[1])
 model = Sequential()
 model.add(embedding_layer)
-model.add(Conv1D(512, 5, activation='relu'))
+model.add(Conv1D(256, 5, activation='relu'))
 model.add(GlobalAveragePooling1D())
 model.add(Dense(1, activation='sigmoid'))
 
